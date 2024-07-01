@@ -1,10 +1,13 @@
-#!/usr/bin/python
 import praw
 import random
 import time
 import datetime
 import os
 import logging
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(filename='reddit_bot.log', level=logging.INFO, format='%(asctime)s - %(message)s')
@@ -59,3 +62,4 @@ for submission in subreddit.stream.submissions():
 
         # Random delay to mimic human behavior
         time.sleep(random.randint(2, 10))
+
