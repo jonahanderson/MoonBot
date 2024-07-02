@@ -98,13 +98,22 @@ def generate_comment(post_title, post_text):
             max_tokens=150,
             temperature=0.7
         )
-        comment = completion.choices[0].message['content'].strip()
+        comment = completion.choices[0].message.content.strip()
         return comment
-    except openai.error.RateLimitError as e:
+    except openai.RateLimitError as e:
         logging.error(f"Rate limit error: {e}")
-        return "Rate limit exceeded. Please try again later."
+        return None
+    except openai.AuthenticationError as e:
+        logging.error(f"Authentication error: {e}")
+        return None
+    except openai.APIConnectionError as e:
+        logging.error(f"API connection error: {e}")
+        return None
+    except openai.OpenAIError as e:
+        logging.error(f"OpenAI error: {e}")
+        return None
     except Exception as e:
-        logging.error(f"An error occurred while generating a comment: {e}")
+        logging.error(f"An unknown error occurred while generating a comment: {e}")
         return None
 
 def process_submission(submission):
@@ -138,6 +147,8 @@ def process_submission(submission):
             except praw.exceptions.APIException as e:
                 logging.error(f"An error occurred: {e}")
                 print(f"{Fore.RED}An error occurred: {e}{Style.RESET_ALL}")
+        else:
+            print(f"{Fore.RED}Failed to generate a comment due to an error.{Style.RESET_ALL}")
     else:
         try:
             logging.info(f"Posting comment: {x}")
