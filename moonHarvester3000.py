@@ -1,41 +1,17 @@
-import subprocess
+import openai
+import logging
+from dotenv import load_dotenv
+import os
 import sys
-import time
-import pkg_resources
 import praw
 import random
 import datetime
-import os
-import logging
 import sqlite3
-import openai
-from dotenv import load_dotenv
 from colorama import init, Fore, Style
+import time
 
 # Ensure Python version is 3.8 or above
 assert sys.version_info >= (3, 8), "Please use Python 3.8 or above."
-
-# Function to check if a package is installed
-def check_package(package):
-    try:
-        dist = pkg_resources.get_distribution(package)
-        return True
-    except pkg_resources.DistributionNotFound:
-        return False
-
-# List of required packages
-required_packages = ['praw', 'python-dotenv', 'colorama', 'openai']
-
-# Check and prompt for missing packages
-for package in required_packages:
-    if not check_package(package):
-        print(f"The required package '{package}' is not installed.")
-        install = input(f"Do you want to install '{package}' now? (yes/no): ")
-        if install.lower() in ['yes', 'y']:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-        else:
-            print(f"Please install '{package}' manually and re-run the script.")
-            sys.exit(1)
 
 # Initialize colorama
 init(autoreset=True)
@@ -61,17 +37,15 @@ class CustomFormatter(logging.Formatter):
 
 # Apply custom formatter
 for handler in logging.getLogger().handlers:
-    handler.setFormatter(CustomFormatter('%(asctime)s - %(levellevelname)s - %(message)s'))
+    handler.setFormatter(CustomFormatter('%(asctime)s - %(levelname)s - %(message)s'))
 
-# Fetch Reddit credentials from environment variables
+# Fetch credentials and API keys from environment variables
+openai.api_key = os.getenv('OPENAI_API_KEY')
 userAgent = os.getenv('REDDIT_USER_AGENT')
 cID = os.getenv('REDDIT_CLIENT_ID')
 cSC = os.getenv('REDDIT_CLIENT_SECRET')
 userN = os.getenv('REDDIT_USERNAME')
 userP = os.getenv('REDDIT_PASSWORD')
-
-# Fetch OpenAI API key from environment variables
-openai.api_key = os.getenv('OPENAI_API_KEY')
 
 logging.info("Starting Moon Bot")
 time.sleep(1)  # Adding a delay for readability
@@ -114,16 +88,21 @@ def mark_post_as_processed(submission):
 def generate_comment(post_title, post_text):
     prompt = f"Generate a comment for the following Reddit post:\n\nTitle: {post_title}\n\nText: {post_text}\n\nComment:"
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
+        client = openai.OpenAI(api_key=openai.api_key)
+        completion = client.chat.completions.create(
+            model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=150
+            max_tokens=150,
+            temperature=0.7
         )
-        comment = response.choices[0].message['content'].strip()
+        comment = completion.choices[0].message['content'].strip()
         return comment
+    except openai.error.RateLimitError as e:
+        logging.error(f"Rate limit error: {e}")
+        return "Rate limit exceeded. Please try again later."
     except Exception as e:
         logging.error(f"An error occurred while generating a comment: {e}")
         return None
