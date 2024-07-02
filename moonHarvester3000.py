@@ -2,6 +2,13 @@ import subprocess
 import sys
 import time
 import pkg_resources
+import praw
+import random
+import datetime
+import os
+import logging
+from dotenv import load_dotenv
+from colorama import init, Fore, Style
 
 # Function to check if a package is installed
 def check_package(package):
@@ -24,14 +31,6 @@ for package in required_packages:
         else:
             print(f"Please install '{package}' manually and re-run the script.")
             sys.exit(1)
-
-import praw
-import random
-import datetime
-import os
-import logging
-from dotenv import load_dotenv
-from colorama import init, Fore, Style
 
 # Initialize colorama
 init(autoreset=True)
@@ -66,7 +65,7 @@ cSC = os.getenv('REDDIT_CLIENT_SECRET')
 userN = os.getenv('REDDIT_USERNAME')
 userP = os.getenv('REDDIT_PASSWORD')
 
-logging.info("Starting Reddit bot")
+logging.info("Starting Moon Bot")
 time.sleep(1)  # Adding a delay for readability
 
 # Initialize Reddit instance
@@ -106,15 +105,14 @@ def process_submission(submission):
             logging.error(f"An error occurred: {e}")
             print(f"{Fore.RED}An error occurred: {e}{Style.RESET_ALL}")
 
-try:
-    # Fetch recent posts
+def fetch_recent_posts():
     logging.info("Fetching latest submissions")
     time.sleep(1)  # Adding a delay for readability
     for submission in subreddit.new(limit=10):  # Adjust the limit as needed
         process_submission(submission)
         print(f"{Fore.MAGENTA}{'='*80}{Style.RESET_ALL}")  # Adding a separator for readability
 
-    # Stream new submissions
+def stream_new_submissions():
     logging.info("Starting subreddit stream")
     start_time = time.time()
     time.sleep(1)  # Adding a delay for readability
@@ -124,6 +122,31 @@ try:
             print(f"{Fore.MAGENTA}{'='*80}{Style.RESET_ALL}")  # Adding a separator for readability
             # Random delay to mimic human behavior
             time.sleep(random.randint(2, 10))
-except Exception as e:
-    logging.error(f"An error occurred: {e}")
-    print(f"{Fore.RED}An error occurred: {e}{Style.RESET_ALL}")
+
+def fetch_then_stream():
+    fetch_recent_posts()
+    stream_new_submissions()
+
+def main():
+    print(f"{Fore.GREEN}Welcome to the Moon Bot!{Style.RESET_ALL}")
+    print(f"{Fore.GREEN}Choose an option:{Style.RESET_ALL}")
+    print(f"{Fore.GREEN}1. Fetch recent posts{Style.RESET_ALL}")
+    print(f"{Fore.GREEN}2. Stream new submissions{Style.RESET_ALL}")
+    print(f"{Fore.GREEN}3. Fetch 10 recent posts and then stream new submissions{Style.RESET_ALL}")
+    choice = input(f"{Fore.YELLOW}Enter your choice (1, 2, or 3): {Style.RESET_ALL}")
+
+    if choice == '1':
+        fetch_recent_posts()
+    elif choice == '2':
+        stream_new_submissions()
+    elif choice == '3':
+        fetch_then_stream()
+    else:
+        print(f"{Fore.RED}Invalid choice. Please run the script again and select a valid option.{Style.RESET_ALL}")
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        print(f"{Fore.RED}An error occurred: {e}{Style.RESET_ALL}")
