@@ -7,6 +7,7 @@ import random
 import datetime
 import os
 import logging
+import sqlite3
 from dotenv import load_dotenv
 from colorama import init, Fore, Style
 
@@ -79,7 +80,35 @@ reddit = praw.Reddit(
 
 subreddit = reddit.subreddit('cryptocurrency')
 
+# Initialize SQLite database
+conn = sqlite3.connect('moonbot.db')
+c = conn.cursor()
+
+# Create table if it doesn't exist
+c.execute('''
+CREATE TABLE IF NOT EXISTS processed_posts (
+    id TEXT PRIMARY KEY,
+    title TEXT,
+    selftext TEXT,
+    created_utc INTEGER
+)
+''')
+conn.commit()
+
+def is_post_processed(post_id):
+    c.execute('SELECT id FROM processed_posts WHERE id = ?', (post_id,))
+    return c.fetchone() is not None
+
+def mark_post_as_processed(submission):
+    c.execute('INSERT INTO processed_posts (id, title, selftext, created_utc) VALUES (?, ?, ?, ?)', 
+              (submission.id, submission.title, submission.selftext, submission.created_utc))
+    conn.commit()
+
 def process_submission(submission):
+    if is_post_processed(submission.id):
+        logging.info(f"Skipping already processed submission: {submission.title}")
+        return
+
     logging.info(f"Processing submission: {submission.title}")
     print(f"{Fore.CYAN}Title:{Style.RESET_ALL} {submission.title}")
     print(f"{Fore.CYAN}Text:{Style.RESET_ALL} {submission.selftext}")
@@ -91,14 +120,14 @@ def process_submission(submission):
     x = input(f"{Fore.YELLOW}Enter your comment:{Style.RESET_ALL} ")
 
     if x == "SKIP":
-        submission.save()
+        mark_post_as_processed(submission)
         logging.info("Skipping this post")
         print(f"{Fore.YELLOW}SKIPPING THIS POST{Style.RESET_ALL}")
     else:
         try:
             logging.info(f"Posting comment: {x}")
             submission.reply(x)
-            submission.save()
+            mark_post_as_processed(submission)
             logging.info("Comment posted successfully")
             print(f"{Fore.GREEN}Comment Posted{Style.RESET_ALL}")
         except praw.exceptions.APIException as e:
@@ -117,7 +146,7 @@ def stream_new_submissions():
     start_time = time.time()
     time.sleep(1)  # Adding a delay for readability
     for submission in subreddit.stream.submissions(skip_existing=True):
-        if not submission.saved and not submission.created_utc < start_time:
+        if not is_post_processed(submission.id):
             process_submission(submission)
             print(f"{Fore.MAGENTA}{'='*80}{Style.RESET_ALL}")  # Adding a separator for readability
             # Random delay to mimic human behavior
@@ -150,3 +179,5 @@ if __name__ == "__main__":
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         print(f"{Fore.RED}An error occurred: {e}{Style.RESET_ALL}")
+    finally:
+        conn.close()  # Ensure the database connection is closed
