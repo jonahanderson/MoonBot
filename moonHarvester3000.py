@@ -141,7 +141,7 @@ def process_submission(submission):
             comment = generate_comment(submission.title, submission.selftext)
             if comment:
                 print(f"{Fore.YELLOW}Generated Comment:{Style.RESET_ALL} {comment}")
-                confirm = input(f"{Fore.YELLOW}Do you want to post this comment? (yes/no): {Style.RESET_ALL} ")
+                confirm = input(f"{Fore.YELLOW}Do you want to post this comment? (y/n): {Style.RESET_ALL} ")
                 if confirm.lower() in ['yes', 'y']:
                     try:
                         logging.info(f"Posting generated comment: {comment}")
@@ -158,16 +158,20 @@ def process_submission(submission):
             else:
                 print(f"{Fore.RED}Failed to generate a comment due to an error.{Style.RESET_ALL}")
         else:
-            try:
-                logging.info(f"Posting comment: {x}")
-                submission.reply(x)
-                mark_post_as_processed(submission)
-                logging.info("Comment posted successfully")
-                print(f"{Fore.GREEN}Comment Posted{Style.RESET_ALL}")
-                break
-            except praw.exceptions.APIException as e:
-                logging.error(f"An error occurred: {e}")
-                print(f"{Fore.RED}An error occurred: {e}{Style.RESET_ALL}")
+            confirm = input(f"{Fore.YELLOW}Do you want to post this comment? (y/n): {Style.RESET_ALL} ")
+            if confirm.lower() in ['yes', 'y']:
+                try:
+                    logging.info(f"Posting comment: {x}")
+                    submission.reply(x)
+                    mark_post_as_processed(submission)
+                    logging.info("Comment posted successfully")
+                    print(f"{Fore.GREEN}Comment Posted{Style.RESET_ALL}")
+                    break
+                except praw.exceptions.APIException as e:
+                    logging.error(f"An error occurred: {e}")
+                    print(f"{Fore.RED}An error occurred: {e}{Style.RESET_ALL}")
+            else:
+                print(f"{Fore.YELLOW}You can enter your own comment now or type 'SKIP' to skip this post or 'GENERATE' to generate a comment.{Style.RESET_ALL}")
 
 def fetch_recent_posts():
     logging.info("Fetching latest submissions")
