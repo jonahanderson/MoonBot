@@ -8,8 +8,12 @@ import datetime
 import os
 import logging
 import sqlite3
+import openai
 from dotenv import load_dotenv
 from colorama import init, Fore, Style
+
+# Ensure Python version is 3.8 or above
+assert sys.version_info >= (3, 8), "Please use Python 3.8 or above."
 
 # Function to check if a package is installed
 def check_package(package):
@@ -20,7 +24,7 @@ def check_package(package):
         return False
 
 # List of required packages
-required_packages = ['praw', 'python-dotenv', 'colorama']
+required_packages = ['praw', 'python-dotenv', 'colorama', 'openai']
 
 # Check and prompt for missing packages
 for package in required_packages:
@@ -57,7 +61,7 @@ class CustomFormatter(logging.Formatter):
 
 # Apply custom formatter
 for handler in logging.getLogger().handlers:
-    handler.setFormatter(CustomFormatter('%(asctime)s - %(levelname)s - %(message)s'))
+    handler.setFormatter(CustomFormatter('%(asctime)s - %(levellevelname)s - %(message)s'))
 
 # Fetch Reddit credentials from environment variables
 userAgent = os.getenv('REDDIT_USER_AGENT')
@@ -65,6 +69,9 @@ cID = os.getenv('REDDIT_CLIENT_ID')
 cSC = os.getenv('REDDIT_CLIENT_SECRET')
 userN = os.getenv('REDDIT_USERNAME')
 userP = os.getenv('REDDIT_PASSWORD')
+
+# Fetch OpenAI API key from environment variables
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 logging.info("Starting Moon Bot")
 time.sleep(1)  # Adding a delay for readability
@@ -104,6 +111,23 @@ def mark_post_as_processed(submission):
               (submission.id, submission.title, submission.selftext, submission.created_utc))
     conn.commit()
 
+def generate_comment(post_title, post_text):
+    prompt = f"Generate a comment for the following Reddit post:\n\nTitle: {post_title}\n\nText: {post_text}\n\nComment:"
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=150
+        )
+        comment = response.choices[0].message['content'].strip()
+        return comment
+    except Exception as e:
+        logging.error(f"An error occurred while generating a comment: {e}")
+        return None
+
 def process_submission(submission):
     if is_post_processed(submission.id):
         logging.info(f"Skipping already processed submission: {submission.title}")
@@ -117,12 +141,24 @@ def process_submission(submission):
     print(f"{Fore.CYAN}DATE AND TIME:{Style.RESET_ALL} {datetime.datetime.fromtimestamp(int(submission.created)).strftime('%Y-%m-%d %H:%M:%S')}")
     print(" --- ")
 
-    x = input(f"{Fore.YELLOW}Enter your comment:{Style.RESET_ALL} ")
+    x = input(f"{Fore.YELLOW}Enter your comment (or type 'GENERATE' to generate a comment): {Style.RESET_ALL} ")
 
     if x == "SKIP":
         mark_post_as_processed(submission)
         logging.info("Skipping this post")
         print(f"{Fore.YELLOW}SKIPPING THIS POST{Style.RESET_ALL}")
+    elif x == "GENERATE":
+        comment = generate_comment(submission.title, submission.selftext)
+        if comment:
+            try:
+                logging.info(f"Posting generated comment: {comment}")
+                submission.reply(comment)
+                mark_post_as_processed(submission)
+                logging.info("Generated comment posted successfully")
+                print(f"{Fore.GREEN}Generated Comment Posted{Style.RESET_ALL}")
+            except praw.exceptions.APIException as e:
+                logging.error(f"An error occurred: {e}")
+                print(f"{Fore.RED}An error occurred: {e}{Style.RESET_ALL}")
     else:
         try:
             logging.info(f"Posting comment: {x}")
@@ -156,13 +192,19 @@ def fetch_then_stream():
     fetch_recent_posts()
     stream_new_submissions()
 
+def clear_database():
+    c.execute('DELETE FROM processed_posts')
+    conn.commit()
+    print(f"{Fore.RED}Database cleared!{Style.RESET_ALL}")
+
 def main():
     print(f"{Fore.GREEN}Welcome to the Moon Bot!{Style.RESET_ALL}")
     print(f"{Fore.GREEN}Choose an option:{Style.RESET_ALL}")
     print(f"{Fore.GREEN}1. Fetch recent posts{Style.RESET_ALL}")
     print(f"{Fore.GREEN}2. Stream new submissions{Style.RESET_ALL}")
     print(f"{Fore.GREEN}3. Fetch 10 recent posts and then stream new submissions{Style.RESET_ALL}")
-    choice = input(f"{Fore.YELLOW}Enter your choice (1, 2, or 3): {Style.RESET_ALL}")
+    print(f"{Fore.GREEN}4. Clear processed posts database{Style.RESET_ALL}")
+    choice = input(f"{Fore.YELLOW}Enter your choice (1, 2, 3, or 4): {Style.RESET_ALL}")
 
     if choice == '1':
         fetch_recent_posts()
@@ -170,6 +212,8 @@ def main():
         stream_new_submissions()
     elif choice == '3':
         fetch_then_stream()
+    elif choice == '4':
+        clear_database()
     else:
         print(f"{Fore.RED}Invalid choice. Please run the script again and select a valid option.{Style.RESET_ALL}")
 
