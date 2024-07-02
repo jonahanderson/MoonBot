@@ -129,36 +129,45 @@ def process_submission(submission):
     print(f"{Fore.CYAN}DATE AND TIME:{Style.RESET_ALL} {datetime.datetime.fromtimestamp(int(submission.created)).strftime('%Y-%m-%d %H:%M:%S')}")
     print(" --- ")
 
-    x = input(f"{Fore.YELLOW}Enter your comment (or type 'GENERATE' to generate a comment): {Style.RESET_ALL} ")
+    while True:
+        x = input(f"{Fore.YELLOW}Enter your comment (or type 'GENERATE' to generate a comment): {Style.RESET_ALL} ")
 
-    if x == "SKIP":
-        mark_post_as_processed(submission)
-        logging.info("Skipping this post")
-        print(f"{Fore.YELLOW}SKIPPING THIS POST{Style.RESET_ALL}")
-    elif x == "GENERATE":
-        comment = generate_comment(submission.title, submission.selftext)
-        if comment:
+        if x == "SKIP":
+            mark_post_as_processed(submission)
+            logging.info("Skipping this post")
+            print(f"{Fore.YELLOW}SKIPPING THIS POST{Style.RESET_ALL}")
+            break
+        elif x == "GENERATE":
+            comment = generate_comment(submission.title, submission.selftext)
+            if comment:
+                print(f"{Fore.YELLOW}Generated Comment:{Style.RESET_ALL} {comment}")
+                confirm = input(f"{Fore.YELLOW}Do you want to post this comment? (yes/no): {Style.RESET_ALL} ")
+                if confirm.lower() in ['yes', 'y']:
+                    try:
+                        logging.info(f"Posting generated comment: {comment}")
+                        submission.reply(comment)
+                        mark_post_as_processed(submission)
+                        logging.info("Generated comment posted successfully")
+                        print(f"{Fore.GREEN}Generated Comment Posted{Style.RESET_ALL}")
+                        break
+                    except praw.exceptions.APIException as e:
+                        logging.error(f"An error occurred: {e}")
+                        print(f"{Fore.RED}An error occurred: {e}{Style.RESET_ALL}")
+                else:
+                    print(f"{Fore.YELLOW}You can enter your own comment now or type 'SKIP' to skip this post or 'GENERATE' to generate another comment.{Style.RESET_ALL}")
+            else:
+                print(f"{Fore.RED}Failed to generate a comment due to an error.{Style.RESET_ALL}")
+        else:
             try:
-                logging.info(f"Posting generated comment: {comment}")
-                submission.reply(comment)
+                logging.info(f"Posting comment: {x}")
+                submission.reply(x)
                 mark_post_as_processed(submission)
-                logging.info("Generated comment posted successfully")
-                print(f"{Fore.GREEN}Generated Comment Posted{Style.RESET_ALL}")
+                logging.info("Comment posted successfully")
+                print(f"{Fore.GREEN}Comment Posted{Style.RESET_ALL}")
+                break
             except praw.exceptions.APIException as e:
                 logging.error(f"An error occurred: {e}")
                 print(f"{Fore.RED}An error occurred: {e}{Style.RESET_ALL}")
-        else:
-            print(f"{Fore.RED}Failed to generate a comment due to an error.{Style.RESET_ALL}")
-    else:
-        try:
-            logging.info(f"Posting comment: {x}")
-            submission.reply(x)
-            mark_post_as_processed(submission)
-            logging.info("Comment posted successfully")
-            print(f"{Fore.GREEN}Comment Posted{Style.RESET_ALL}")
-        except praw.exceptions.APIException as e:
-            logging.error(f"An error occurred: {e}")
-            print(f"{Fore.RED}An error occurred: {e}{Style.RESET_ALL}")
 
 def fetch_recent_posts():
     logging.info("Fetching latest submissions")
