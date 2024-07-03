@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 import os
 import sys
 import praw
-import random
 import datetime
 import sqlite3
 from colorama import init, Fore, Style
@@ -61,7 +60,7 @@ reddit = praw.Reddit(
 
 subreddit = reddit.subreddit('cryptocurrency')
 
-# Initialize SQLite database
+# Initialize SQLite database and cursor
 conn = sqlite3.connect('moonbot.db')
 c = conn.cursor()
 
@@ -86,12 +85,13 @@ def mark_post_as_processed(submission):
     conn.commit()
 
 def generate_comments(post_title, post_text):
-    prompt = f"Generate a comment for the following Reddit post:\n\nTitle: {post_title}\n\nText: {post_text}\n\nPlease ensure the comment is in lowercase and does not contain any emojis or special characters."
+    prompt = f"Generate a comment for the following Reddit post:\n\nTitle: {post_title}\n\nText: {post_text}\n\nPlease ensure the comment is in lowercase and does not contain any emojis."
+    
     try:
         completion = openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a versatile Reddit commenter aiming to maximize karma on the cryptocurrency subreddit. Your comments should be engaging and tailored to the context—sometimes informative, sometimes humorous or sarcastic, and occasionally provocative. Always consider what type of comment will get the most upvotes in each situation. Ensure the comments are in lowercase and do not include any emojis or special characters."},
+                {"role": "system", "content": "You are a versatile Reddit commenter aiming to maximize karma on the cryptocurrency subreddit. Your comments should be engaging and tailored to the context—sometimes informative, sometimes humorous or sarcastic, and occasionally provocative. Always consider what type of comment will get the most upvotes in each situation. Ensure the comments are in lowercase and do not include any emojis."},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=150,
@@ -116,9 +116,6 @@ def generate_comments(post_title, post_text):
         logging.error(f"An unknown error occurred while generating comments: {e}")
         return []
 
-
-
-
 def process_submission(submission):
     if is_post_processed(submission.id):
         logging.info(f"Skipping already processed submission: {submission.title}")
@@ -132,11 +129,13 @@ def process_submission(submission):
     print(f"{Fore.CYAN}DATE AND TIME:{Style.RESET_ALL} {datetime.datetime.fromtimestamp(int(submission.created)).strftime('%Y-%m-%d %H:%M:%S')}")
     print(" --- ")
 
+    # Store the submission data
+    mark_post_as_processed(submission)
+
     while True:
         x = input(f"{Fore.YELLOW}Enter your comment (or type 'GENERATE' to generate comments): {Style.RESET_ALL} ")
 
         if x == "SKIP":
-            mark_post_as_processed(submission)
             logging.info("Skipping this post")
             print(f"{Fore.YELLOW}SKIPPING THIS POST{Style.RESET_ALL}")
             break
@@ -153,7 +152,6 @@ def process_submission(submission):
                     try:
                         logging.info(f"Posting generated comment: {selected_comment}")
                         submission.reply(selected_comment)
-                        mark_post_as_processed(submission)
                         logging.info("Generated comment posted successfully")
                         print(f"{Fore.GREEN}Generated Comment Posted{Style.RESET_ALL}")
                         break
@@ -163,7 +161,6 @@ def process_submission(submission):
                 elif choice.lower() == 'manual':
                     continue  # Loop back to allow manual comment entry
                 elif choice.lower() == 'skip':
-                    mark_post_as_processed(submission)
                     logging.info("Skipping this post")
                     print(f"{Fore.YELLOW}SKIPPING THIS POST{Style.RESET_ALL}")
                     break
@@ -172,7 +169,6 @@ def process_submission(submission):
         else:
             try:
                 submission.reply(x)
-                mark_post_as_processed(submission)
                 logging.info(f"User comment posted successfully: {x}")
                 print(f"{Fore.GREEN}User Comment Posted{Style.RESET_ALL}")
                 break
@@ -183,7 +179,7 @@ def process_submission(submission):
 def fetch_recent_posts():
     logging.info("Fetching latest submissions")
     time.sleep(1)  # Adding a delay for readability
-    for submission in subreddit.new(limit=10):  # Adjust the limit as needed
+    for submission in subreddit.new(limit=20):  # Adjust the limit as needed
         process_submission(submission)
         print(f"{Fore.MAGENTA}{'='*80}{Style.RESET_ALL}")  # Adding a separator for readability
 
