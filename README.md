@@ -31,6 +31,12 @@ Create the `.env` file:
 touch .env
 ```
 
+Windows: 
+```sh
+type nul > .env
+notepad .env
+```
+
 Add your credentials to the `.env` file:
 
 ```sh
