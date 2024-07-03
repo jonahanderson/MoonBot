@@ -85,36 +85,39 @@ def mark_post_as_processed(submission):
               (submission.id, submission.title, submission.selftext, submission.created_utc))
     conn.commit()
 
-def generate_comment(post_title, post_text):
-    prompt = f"Generate a comment for the following Reddit post:\n\nTitle: {post_title}\n\nText: {post_text}\n\nComment:"
+def generate_comments(post_title, post_text):
+    prompt = f"Generate a comment for the following Reddit post:\n\nTitle: {post_title}\n\nText: {post_text}\n\nPlease ensure the comment is in lowercase and does not contain any emojis or special characters."
     try:
-        client = openai.OpenAI(api_key=openai.api_key)
-        completion = client.chat.completions.create(
+        completion = openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a versatile Reddit commenter aiming to maximize karma on the cryptocurrency subreddit. Your comments should be engaging and tailored to the context—sometimes informative, sometimes humorous or sarcastic, and occasionally provocative. Always consider what type of comment will get the most upvotes in each situation."},
+                {"role": "system", "content": "You are a versatile Reddit commenter aiming to maximize karma on the cryptocurrency subreddit. Your comments should be engaging and tailored to the context—sometimes informative, sometimes humorous or sarcastic, and occasionally provocative. Always consider what type of comment will get the most upvotes in each situation. Ensure the comments are in lowercase and do not include any emojis or special characters."},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=150,
-            temperature=0.7
+            temperature=1.0,  # Increased temperature for more variability
+            n=3  # Request three completions
         )
-        comment = completion.choices[0].message.content.strip()
-        return comment
+        comments = [choice.message.content.strip() for choice in completion.choices]
+        return comments
     except openai.RateLimitError as e:
         logging.error(f"Rate limit error: {e}")
-        return None
+        return []
     except openai.AuthenticationError as e:
         logging.error(f"Authentication error: {e}")
-        return None
+        return []
     except openai.APIConnectionError as e:
         logging.error(f"API connection error: {e}")
-        return None
+        return []
     except openai.OpenAIError as e:
         logging.error(f"OpenAI error: {e}")
-        return None
+        return []
     except Exception as e:
-        logging.error(f"An unknown error occurred while generating a comment: {e}")
-        return None
+        logging.error(f"An unknown error occurred while generating comments: {e}")
+        return []
+
+
+
 
 def process_submission(submission):
     if is_post_processed(submission.id):
@@ -130,7 +133,7 @@ def process_submission(submission):
     print(" --- ")
 
     while True:
-        x = input(f"{Fore.YELLOW}Enter your comment (or type 'GENERATE' to generate a comment): {Style.RESET_ALL} ")
+        x = input(f"{Fore.YELLOW}Enter your comment (or type 'GENERATE' to generate comments): {Style.RESET_ALL} ")
 
         if x == "SKIP":
             mark_post_as_processed(submission)
@@ -138,14 +141,18 @@ def process_submission(submission):
             print(f"{Fore.YELLOW}SKIPPING THIS POST{Style.RESET_ALL}")
             break
         elif x == "GENERATE":
-            comment = generate_comment(submission.title, submission.selftext)
-            if comment:
-                print(f"{Fore.YELLOW}Generated Comment:{Style.RESET_ALL} {comment}")
-                confirm = input(f"{Fore.YELLOW}Do you want to post this comment? (y/n): {Style.RESET_ALL} ")
-                if confirm.lower() in ['yes', 'y']:
+            comments = generate_comments(submission.title, submission.selftext)
+            if comments:
+                for i, comment in enumerate(comments, start=1):
+                    print(f"{Fore.YELLOW}Generated Comment {i}:{Style.RESET_ALL} {comment}")
+                
+                choice = input(f"{Fore.YELLOW}Choose a comment to post (1, 2, 3) or type 'manual' to write your own or 'skip' to skip: {Style.RESET_ALL} ")
+                
+                if choice in ['1', '2', '3']:
+                    selected_comment = comments[int(choice) - 1]
                     try:
-                        logging.info(f"Posting generated comment: {comment}")
-                        submission.reply(comment)
+                        logging.info(f"Posting generated comment: {selected_comment}")
+                        submission.reply(selected_comment)
                         mark_post_as_processed(submission)
                         logging.info("Generated comment posted successfully")
                         print(f"{Fore.GREEN}Generated Comment Posted{Style.RESET_ALL}")
@@ -153,25 +160,25 @@ def process_submission(submission):
                     except praw.exceptions.APIException as e:
                         logging.error(f"An error occurred: {e}")
                         print(f"{Fore.RED}An error occurred: {e}{Style.RESET_ALL}")
-                else:
-                    print(f"{Fore.YELLOW}You can enter your own comment now or type 'SKIP' to skip this post or 'GENERATE' to generate another comment.{Style.RESET_ALL}")
-            else:
-                print(f"{Fore.RED}Failed to generate a comment due to an error.{Style.RESET_ALL}")
-        else:
-            confirm = input(f"{Fore.YELLOW}Do you want to post this comment? (y/n): {Style.RESET_ALL} ")
-            if confirm.lower() in ['yes', 'y']:
-                try:
-                    logging.info(f"Posting comment: {x}")
-                    submission.reply(x)
+                elif choice.lower() == 'manual':
+                    continue  # Loop back to allow manual comment entry
+                elif choice.lower() == 'skip':
                     mark_post_as_processed(submission)
-                    logging.info("Comment posted successfully")
-                    print(f"{Fore.GREEN}Comment Posted{Style.RESET_ALL}")
+                    logging.info("Skipping this post")
+                    print(f"{Fore.YELLOW}SKIPPING THIS POST{Style.RESET_ALL}")
                     break
-                except praw.exceptions.APIException as e:
-                    logging.error(f"An error occurred: {e}")
-                    print(f"{Fore.RED}An error occurred: {e}{Style.RESET_ALL}")
             else:
-                print(f"{Fore.YELLOW}You can enter your own comment now or type 'SKIP' to skip this post or 'GENERATE' to generate a comment.{Style.RESET_ALL}")
+                print(f"{Fore.RED}Failed to generate comments. Please try again.{Style.RESET_ALL}")
+        else:
+            try:
+                submission.reply(x)
+                mark_post_as_processed(submission)
+                logging.info(f"User comment posted successfully: {x}")
+                print(f"{Fore.GREEN}User Comment Posted{Style.RESET_ALL}")
+                break
+            except praw.exceptions.APIException as e:
+                logging.error(f"An error occurred: {e}")
+                print(f"{Fore.RED}An error occurred: {e}{Style.RESET_ALL}")
 
 def fetch_recent_posts():
     logging.info("Fetching latest submissions")
