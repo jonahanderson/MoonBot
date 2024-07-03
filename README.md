@@ -12,8 +12,8 @@ Open your terminal (or Command Prompt on Windows) and run the following command 
 git clone https://github.com/jonahanderson/MoonBot.git
 cd MoonBot
 ```
-Note: Download git for Windows if not installed: [git Download](https://git-scm.com/download/win).
-After the installation is complete, open a new Command Prompt and type:
+Note: [Download git for Windows](https://git-scm.com/download/win) if not installed.
+Verify the git installation by opening a new Command Prompt and typing:
 
 ```sh
 git --version
