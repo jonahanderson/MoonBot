@@ -6,6 +6,7 @@ import sys
 import praw
 import datetime
 import sqlite3
+import random
 from colorama import init, Fore, Style
 import time
 
