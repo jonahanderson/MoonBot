@@ -12,6 +12,12 @@ Open your terminal (or Command Prompt on Windows) and run the following command 
 git clone https://github.com/jonahanderson/MoonBot.git
 cd MoonBot
 ```
+Note: Download git for Windows if not installed: [git Download](https://git-scm.com/download/win).
+After the installation is complete, open a new Command Prompt and type:
+
+```sh
+git --version
+```
 
 ### 2. Set Up Environment Variables
 
