@@ -48,7 +48,7 @@ userP = os.getenv('REDDIT_PASSWORD')
 
 logging.info("Starting Moon Bot...\n")
 time.sleep(1)  # Adding a delay for readability
-print(f"{Fore.MAGENTA}{'='*2}{Style.RESET_ALL}")
+print(f"{Fore.MAGENTA}{'='*50}{Style.RESET_ALL}")
 
 # Initialize Reddit instance
 reddit = praw.Reddit(
@@ -236,7 +236,7 @@ def main():
     print(f"{Fore.GREEN}2. Stream new submissions{Style.RESET_ALL}")
     print(f"{Fore.GREEN}3. Fetch 20 recent posts and then stream new submissions{Style.RESET_ALL}")
     print(f"{Fore.GREEN}4. Clear processed posts database{Style.RESET_ALL}")
-    print(f"{Fore.MAGENTA}{'='*2}\n{Style.RESET_ALL}")
+    print(f"{Fore.MAGENTA}{'='*50}\n{Style.RESET_ALL}")
     choice = input(f"{Fore.YELLOW}Enter your choice (1, 2, 3, or 4): {Style.RESET_ALL}")
 
     if choice == '1':
