@@ -63,6 +63,8 @@ Replace `your_client_id`, `your_client_secret`, `your_username`, `your_password`
 4. Generate a new API key and copy it.
 5. Add the API key to the `.env` file.
 
+NOTE: You may need tier 1 to use the generative features of this bot. See [OpenAI API Usage Tiers]([https://beta.openai.com/signup/](https://platform.openai.com/docs/guides/rate-limits/usage-tiers))
+
 ### 3. Run the Setup Script
 
 Once everything is set up, you can run the setup script which handles environment setup, dependency installation, and starts the MoonBot. Make sure the setup script is executable and run it:
