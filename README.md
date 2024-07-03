@@ -17,9 +17,9 @@ cd MoonBot
 
 #### Create a .env File
 
-The repository already includes a .env file template. You need to fill in your Reddit and OpenAI credentials.
+Create a file named `.env` in the project directory and add your Reddit and OpenAI credentials to it. This file should not be shared or included in version control to keep your credentials secure.
 
-Edit the `.env` file:
+Create the `.env` file:
 
 ```sh
 touch .env
@@ -62,19 +62,11 @@ Replace `your_client_id`, `your_client_secret`, `your_username`, `your_password`
 
 ### 3. Run the Setup Script
 
-Once everything is set up, you can run the setup script which handles environment setup and dependency installation. Make sure the setup script is executable and run it:
+Once everything is set up, you can run the setup script which handles environment setup, dependency installation, and starts the MoonBot. Make sure the setup script is executable and run it:
 
 ```sh
 chmod +x setup.sh
 ./setup.sh
-```
-
-### 4. Run the Script
-
-After setting up the environment and dependencies, you can run the main script:
-
-```sh
-python moonHarvester3000.py
 ```
 
 ### Notes
