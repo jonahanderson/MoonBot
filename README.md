@@ -85,8 +85,8 @@ NOTE: You may need tier 1 to use the generative features of this bot. See [OpenA
 Once everything is set up, you can run the setup script which handles environment setup, dependency installation, and starts the MoonBot. Make sure the setup script is executable and run it:
 
 ```sh
-chmod +x setup.sh
-./setup.sh
+chmod +x farmMoons.sh
+./farmMoons.sh
 ```
 
 ### Notes
