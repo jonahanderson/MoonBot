@@ -19,10 +19,10 @@ Download and Set Up WSL on Windows
 
    This command will:
    
-   *Enable the necessary WSL feature.
-   *Download and install the latest WSL Linux kernel.
-   *Set WSL 2 as the default.
-   *Download and install Ubuntu as the default Linux distribution.
+   * Enable the necessary WSL feature.
+   * Download and install the latest WSL Linux kernel.
+   * Set WSL 2 as the default.
+   * Download and install Ubuntu as the default Linux distribution.
 
 3. **Restart Your Computer**
 
