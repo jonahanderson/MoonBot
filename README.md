@@ -2,9 +2,61 @@
 
 A Python script to automatically comment on Reddit posts in the cryptocurrency subreddit.
 
-## Setup
+## Setup Instructions for Windows:
 
-### 1. Clone the Repository
+Download and Set Up WSL on Windows
+1. **Open PowerShell as Administrator**
+
+   Press `Win + X`, then select Windows PowerShell (Admin).
+
+**Install WSL and Set Up Ubuntu**
+
+2. **In the PowerShell window, run the following command to install WSL and set up Ubuntu:**
+
+   ```sh
+   wsl --install
+   ```
+
+   This command will:
+   
+   *Enable the necessary WSL feature.
+   *Download and install the latest WSL Linux kernel.
+   *Set WSL 2 as the default.
+   *Download and install Ubuntu as the default Linux distribution.
+
+3. **Restart Your Computer**
+
+   Follow the prompt to restart your computer.
+
+4. **Complete Ubuntu Setup**
+
+   After your computer restarts, Ubuntu will launch and prompt you to complete the installation. Set up your user account and password as prompted.
+
+## Using WSL to Run the Setup Script
+
+1. **Open Ubuntu (WSL)**
+
+   After setting up Ubuntu, open it from the Start menu.
+
+2. **Update and Upgrade Packages**
+
+   In the Ubuntu terminal, update and upgrade the package lists:
+   
+   ```sh
+   sudo apt update
+   sudo apt upgrade -y
+   ```
+
+3. **Install Git**
+
+
+   Install Git to clone the repository:
+   
+   ```sh
+   sudo apt install git -y
+   ```
+
+# 1. Clone the Repository
 
 Open your terminal and run the following command to clone the repository:
 
@@ -13,7 +65,7 @@ git clone https://github.com/jonahanderson/MoonBot.git
 cd MoonBot
 ```
 
-### 2. Set Up Environment Variables
+# 2. Set Up Environment Variables
 
 #### Create a .env File
 
@@ -64,7 +116,7 @@ Replace `your_client_id`, `your_client_secret`, `your_username`, `your_password`
 
 NOTE: You may need tier 1 to use the generative features of this bot. See [OpenAI API Usage Tiers]([https://beta.openai.com/signup/](https://platform.openai.com/docs/guides/rate-limits/usage-tiers))
 
-### 3. Run the Setup Script
+## 3. Run the Setup Script
 
 Once everything is set up, you can run the setup script which handles environment setup, dependency installation, and starts the MoonBot. Make sure the setup script is executable and run it:
 
