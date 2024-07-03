@@ -51,7 +51,7 @@ REDDIT_PASSWORD=your_password
 OPENAI_API_KEY=your_openai_api_key
 ```
 
-Replace `your_client_id`, `your_client_secret`, `your_username`, `your_password`, and `your_openai_api_key` with your actual Reddit API and OpenAI API credentials.
+Replace `your_client_id`, `your_client_secret`, `your_username`, `your_password`, and `your_openai_api_key` with your actual Reddit API and OpenAI API credentials. Save your file.
 
 #### How to Get Your Reddit Credentials
 
