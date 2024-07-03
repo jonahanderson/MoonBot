@@ -17,9 +17,9 @@ cd MoonBot
 
 #### Create a .env File
 
-Create a file named `.env` in the project directory and add your Reddit and OpenAI credentials to it. This file should not be shared or included in version control to keep your credentials secure.
+The repository already includes a .env file template. You need to fill in your Reddit and OpenAI credentials.
 
-Create the `.env` file:
+Edit the `.env` file:
 
 ```sh
 touch .env
