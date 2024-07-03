@@ -34,6 +34,9 @@ touch .env
 Windows: 
 ```sh
 type nul > .env
+```
+then:
+```sh
 notepad .env
 ```
 
