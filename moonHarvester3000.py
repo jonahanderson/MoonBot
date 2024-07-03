@@ -86,16 +86,16 @@ def mark_post_as_processed(submission):
     conn.commit()
 
 def generate_comments(post_title, post_text):
-    prompt = f"Generate a comment for the following Reddit post:\n\nTitle: {post_title}\n\nText: {post_text}\n\nPlease ensure the comment is in lowercase, does not contain quotes, and does not contain any emojis."
+    prompt = f"Generate a comment for the following Reddit post:\n\nTitle: {post_title}\n\nText: {post_text}\n\nPlease ensure the comment is in lowercase, does not contain quotes, and does not contain any emojis or special characters. 10% of the time you create a negative, nuanced comment."
     
     try:
         completion = openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a versatile Reddit commenter aiming to maximize karma on the cryptocurrency subreddit. Your comments should be engaging and tailored to the context—sometimes informative, sometimes humorous or sarcastic, and occasionally provocative. Always consider what type of comment will get the most upvotes in each situation. Ensure the comments are in lowercase and do not include any emojis."},
+                {"role": "system", "content": "You are a versatile Reddit commenter aiming to maximize karma on the cryptocurrency subreddit. Your comments should be engaging and tailored to the context—sometimes informative, sometimes humorous or sarcastic, and occasionally provocative. Always consider what type of comment will get the most upvotes in each situation. Ensure the comments are in lowercase and do not include any emojis or special characters."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=200,
+            max_tokens=250,
             temperature=1.0,  # Increased temperature for more variability
             n=3  # Request three completions
         )
@@ -166,7 +166,7 @@ def process_submission(submission):
                                 logging.info("Generated comment posted successfully")
                                 print(f"{Fore.GREEN}Generated Comment Posted{Style.RESET_ALL}")
                                 time.sleep(1)
-                                break
+                                return  # Exit the function to move to the next post
                             except praw.exceptions.APIException as e:
                                 logging.error(f"An error occurred: {e}")
                                 print(f"{Fore.RED}An error occurred: {e}{Style.RESET_ALL}")
@@ -190,7 +190,7 @@ def process_submission(submission):
                     logging.info(f"User comment posted successfully: {x}")
                     time.sleep(1)
                     print(f"{Fore.GREEN}User Comment Posted{Style.RESET_ALL}")
-                    break
+                    return  # Exit the function to move to the next post
                 elif confirm.lower() == 'n':
                     print(f"{Fore.YELLOW}Comment not posted. Enter another comment or generate new comments.{Style.RESET_ALL}")
                 else:
@@ -198,6 +198,7 @@ def process_submission(submission):
             except praw.exceptions.APIException as e:
                 logging.error(f"An error occurred: {e}")
                 print(f"{Fore.RED}An error occurred: {e}{Style.RESET_ALL}")
+
 
 def fetch_recent_posts():
     logging.info("Fetching latest submissions")
@@ -233,7 +234,7 @@ def main():
     print(f"{Fore.YELLOW}Welcome to the Moon Bot!{Style.RESET_ALL}")
     print(f"{Fore.GREEN}Choose an option:{Style.RESET_ALL}")
     print(f"{Fore.GREEN}1. Fetch recent posts{Style.RESET_ALL}")
-    print(f"{Fore.GREEN}2. Stream new submissions{Style.RESET_ALL}")
+    print(f"{Fore.GREEN}2. Stream new submissions (live posts){Style.RESET_ALL}")
     print(f"{Fore.GREEN}3. Fetch 20 recent posts and then stream new submissions{Style.RESET_ALL}")
     print(f"{Fore.GREEN}4. Clear processed posts database{Style.RESET_ALL}")
     print(f"{Fore.MAGENTA}{'='*50}\n{Style.RESET_ALL}")
