@@ -86,16 +86,16 @@ def mark_post_as_processed(submission):
     conn.commit()
 
 def generate_comments(post_title, post_text):
-    prompt = f"Generate a comment for the following Reddit post:\n\nTitle: {post_title}\n\nText: {post_text}\n\nPlease ensure the comment is in lowercase, does not contain quotes, and does not contain any emojis or special characters. 10% of the time you create a negative, nuanced comment."
+    prompt = f"Generate a comment for the following Reddit post:\n\nTitle: {post_title}\n\nText: {post_text}\n\nPlease ensure the comment is in lowercase, does not contain quotes, and does not contain any emojis or special characters. 20% of the time you create a negative, nuanced comment. 10% of the time you use 1-10 words and limit punctuation."
     
     try:
         completion = openai.chat.completions.create(
             model="gpt-4-turbo",
             messages=[
-                {"role": "system", "content": "You are a versatile Reddit commenter aiming to maximize karma on the cryptocurrency subreddit. Your comments should be engaging and tailored to the context—sometimes informative, sometimes humorous or sarcastic, and occasionally provocative. Always consider what type of comment will get the most upvotes in each situation. Ensure the comments are in lowercase and do not include any emojis or special characters."},
+                {"role": "system", "content": "You are a versatile Reddit commenter aiming to maximize karma on the cryptocurrency subreddit. Your comments should be engaging and tailored to the context—sometimes informative, sometimes humorous or sarcastic, and occasionally provocative. Always consider what type of comment will get the most upvotes in each situation. Ensure the comments are in lowercase and do not include any emojis or special characters. Try to limit punctuation or commas when possible, as an internet commenter may not use those."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=250,
+            max_tokens=350,
             temperature=1.0,  # Increased temperature for more variability
             n=3  # Request three completions
         )
