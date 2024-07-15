@@ -90,7 +90,7 @@ def generate_comments(post_title, post_text):
     
     try:
         completion = openai.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4-turbo",
             messages=[
                 {"role": "system", "content": "You are a versatile Reddit commenter aiming to maximize karma on the cryptocurrency subreddit. Your comments should be engaging and tailored to the context—sometimes informative, sometimes humorous or sarcastic, and occasionally provocative. Always consider what type of comment will get the most upvotes in each situation. Ensure the comments are in lowercase and do not include any emojis or special characters."},
                 {"role": "user", "content": prompt}
