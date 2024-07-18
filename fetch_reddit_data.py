@@ -26,7 +26,7 @@ subreddit = reddit.subreddit('cryptocurrency')
 
 def fetch_top_posts_and_comments():
     posts_data = []
-    top_posts = subreddit.top(limit=20)
+    top_posts = subreddit.top(limit=30)
 
     for post in top_posts:
         post_id = post.id
@@ -37,10 +37,13 @@ def fetch_top_posts_and_comments():
         post.comments.replace_more(limit=0)
         top_comments = [comment.body for comment in post.comments[:2]]
 
-        # Prepare the data
+        # Prepare the data in the chat format
         post_data = {
-            "prompt": f"Post Title: {post_title}\nPost Text: {post_text}",
-            "completion": " ".join(top_comments)
+            "messages": [
+                {"role": "system", "content": "You are a helpful assistant that provides relevant comments to Reddit posts."},
+                {"role": "user", "content": f"Post Title: {post_title}\nPost Text: {post_text}"},
+                {"role": "assistant", "content": " ".join(top_comments)}
+            ]
         }
         posts_data.append(post_data)
 
