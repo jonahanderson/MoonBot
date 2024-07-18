@@ -85,12 +85,15 @@ def mark_post_as_processed(submission):
               (submission.id, submission.title, submission.selftext, submission.created_utc))
     conn.commit()
 
+# Fetch the fine-tuned model ID from the environment variables
+fine_tuned_model_id = os.getenv('FINE_TUNED_MODEL_ID')
+
 def generate_comments(post_title, post_text):
     prompt = f"Generate a comment for the following Reddit post:\n\nTitle: {post_title}\n\nText: {post_text}\n\nPlease ensure the comment is in lowercase, does not contain quotes, and does not contain any emojis or special characters. 30% of the time you create a negative, nuanced comment. 10% of the time you use 1-10 words."
     
     try:
         completion = openai.chat.completions.create(
-            model="gpt-4-turbo",
+            model=fine_tuned_model_id,
             messages=[
                 {"role": "system", "content": "You are a versatile Reddit commenter aiming to maximize karma on the cryptocurrency subreddit. Your comments should be engaging and tailored to the context—sometimes informative, sometimes humorous or sarcastic, and occasionally provocative. Always consider what type of comment will get the most upvotes in each situation. Ensure the comments are in lowercase and do not include any emojis or special characters. Do not overdo it on commas or punctuation."},
                 {"role": "user", "content": prompt}
