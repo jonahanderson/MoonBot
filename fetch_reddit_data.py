@@ -25,7 +25,19 @@ reddit = praw.Reddit(
 
 subreddit = reddit.subreddit('cryptocurrency')
 
-def fetch_top_and_hot_posts(limit_posts=30, limit_hot_posts=20, limit_comments=1):
+def is_automod_comment(comment):
+    automod_keywords = [
+        "automoderator", "bot"
+    ]
+    return (comment.author is not None and comment.author.name.lower() in ['automoderator', 'mod', 'bot']) or any(keyword in comment.body.lower() for keyword in automod_keywords)
+
+def decode_unicode_escape(text):
+    try:
+        return text.encode('latin1').decode('unicode_escape')
+    except:
+        return text
+
+def fetch_top_and_hot_posts(limit_posts=50, limit_hot_posts=10, limit_comments=1):
     posts_data = []
     
     # Fetch top posts
@@ -39,14 +51,16 @@ def fetch_top_and_hot_posts(limit_posts=30, limit_hot_posts=20, limit_comments=1
     for post in all_posts:
         try:
             post_id = post.id
-            post_title = post.title
-            post_text = post.selftext
+            post_title = decode_unicode_escape(post.title)
+            post_text = decode_unicode_escape(post.selftext)
 
             # Fetch the top comments
             post.comments.replace_more(limit=0)
             top_comments = [
-                comment.body for comment in post.comments[:limit_comments] 
-                if not isinstance(comment, MoreComments) and comment.author != "AutoModerator"
+                decode_unicode_escape(comment.body) for comment in post.comments[:limit_comments] 
+                if not isinstance(comment, MoreComments) 
+                and not is_automod_comment(comment)
+                and comment.body.lower() not in ["[deleted]", "[removed]"]
             ]
 
             # Prepare the data in the chat format
