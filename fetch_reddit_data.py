@@ -42,18 +42,19 @@ def fix_text(text):
         print(f"Error fixing text: {e}")
         return text
 
-def fetch_top_and_hot_posts(limit_posts=50, limit_hot_posts=25, limit_comments=3):
+def fetch_top_and_hot_posts(limit_posts=100, limit_comments=3):
     conversations = []
+    system_role_added = False
     
     # Fetch top posts
     top_posts = subreddit.top(time_filter="year", limit=limit_posts)
     # Fetch newest posts
-    hot_posts = subreddit.top(time_filter="month", limit=limit_hot_posts)
+    topmonth_posts = subreddit.top(time_filter="month", limit=limit_posts)
 
-    realhot = subreddit.hot(limit=25)
+    hot_posts = subreddit.hot(limit=25)
 
     # Combine the posts
-    all_posts = list(top_posts) + list(hot_posts) + list(realhot)
+    all_posts = list(top_posts) + list(topmonth_posts) + list(hot_posts)
 
     for post in all_posts:
         try:
@@ -75,7 +76,7 @@ def fetch_top_and_hot_posts(limit_posts=50, limit_hot_posts=25, limit_comments=3
 
             # Prepare the data in the chat format
             for i, comment in enumerate(valid_comments):
-                if i == 0:
+                if not system_role_added:
                     conversation = {
                         "messages": [
                             {"role": "system", "content": "You are a helpful assistant that provides relevant comments to Reddit posts."},
@@ -83,6 +84,7 @@ def fetch_top_and_hot_posts(limit_posts=50, limit_hot_posts=25, limit_comments=3
                             {"role": "assistant", "content": comment}
                         ]
                     }
+                    system_role_added = True
                 else:
                     conversation = {
                         "messages": [
