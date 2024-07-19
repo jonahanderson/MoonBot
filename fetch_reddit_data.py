@@ -27,18 +27,23 @@ subreddit = reddit.subreddit('cryptocurrency')
 
 def is_automod_comment(comment):
     automod_keywords = [
-        "automoderator", "bot"
+        "automoderator", "bot", "cointestmod"
     ]
-    return (comment.author is not None and comment.author.name.lower() in ['automoderator', 'mod', 'bot']) or any(keyword in comment.body.lower() for keyword in automod_keywords)
+    return (
+        comment.author is not None 
+        and comment.author.name.lower() in ['automoderator', 'mod', 'bot', 'cointestmod']
+    ) or any(keyword in comment.body.lower() for keyword in automod_keywords)
 
 def decode_unicode_escape(text):
     try:
         return text.encode('latin1').decode('unicode_escape')
-    except:
+    except Exception as e:
+        print(f"Error decoding text: {e}")
         return text
 
-def fetch_top_and_hot_posts(limit_posts=50, limit_hot_posts=10, limit_comments=1):
-    posts_data = []
+def fetch_top_and_hot_posts(limit_posts=50, limit_hot_posts=15, limit_comments=1):
+    conversations = []
+    system_message_added = False
     
     # Fetch top posts
     top_posts = subreddit.top(time_filter="year", limit=limit_posts)
@@ -65,18 +70,27 @@ def fetch_top_and_hot_posts(limit_posts=50, limit_hot_posts=10, limit_comments=1
 
             # Prepare the data in the chat format
             for comment in top_comments:
-                post_data = {
-                    "messages": [
-                        {"role": "system", "content": "You are a helpful assistant that provides relevant comments to Reddit posts."},
-                        {"role": "user", "content": f"Post Title: {post_title}\nPost Text: {post_text}"},
-                        {"role": "assistant", "content": comment}
-                    ]
-                }
-                posts_data.append(post_data)
+                if not system_message_added:
+                    conversation = {
+                        "messages": [
+                            {"role": "system", "content": "You are a helpful assistant that provides relevant comments to Reddit posts."},
+                            {"role": "user", "content": f"{post_title}: {post_text}"},
+                            {"role": "assistant", "content": comment}
+                        ]
+                    }
+                    system_message_added = True
+                else:
+                    conversation = {
+                        "messages": [
+                            {"role": "user", "content": f"{post_title}: {post_text}"},
+                            {"role": "assistant", "content": comment}
+                        ]
+                    }
+                conversations.append(conversation)
         except Exception as e:
             print(f"Error fetching post {post.id}: {e}")
 
-    return posts_data
+    return conversations
 
 def write_to_jsonl(data, filename):
     with open(filename, 'w') as file:
