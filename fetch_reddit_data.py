@@ -42,7 +42,7 @@ def fix_text(text):
         print(f"Error fixing text: {e}")
         return text
 
-def fetch_top_and_hot_posts(limit_posts=50, limit_hot_posts=10, limit_comments=10):
+def fetch_top_and_hot_posts(limit_posts=50, limit_hot_posts=10, limit_comments=1):
     conversations = []
     system_message_added = False
     
