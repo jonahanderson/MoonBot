@@ -1,7 +1,7 @@
 import os
 import json
 import praw
-import codecs
+import ftfy
 from dotenv import load_dotenv
 from praw.models import MoreComments
 
@@ -35,12 +35,11 @@ def is_automod_comment(comment):
         and comment.author.name.lower() in ['automoderator', 'mod', 'bot', 'cointestmod']
     ) or any(keyword in comment.body.lower() for keyword in automod_keywords)
 
-def decode_unicode_escape(text):
+def fix_text(text):
     try:
-        # Decode the escaped unicode characters
-        return codecs.decode(text, 'unicode_escape')
+        return ftfy.fix_encoding(text)
     except Exception as e:
-        print(f"Error decoding text: {e}")
+        print(f"Error fixing text: {e}")
         return text
 
 def fetch_top_and_hot_posts(limit_posts=50, limit_hot_posts=10, limit_comments=10):
@@ -58,13 +57,13 @@ def fetch_top_and_hot_posts(limit_posts=50, limit_hot_posts=10, limit_comments=1
     for post in all_posts:
         try:
             post_id = post.id
-            post_title = decode_unicode_escape(post.title)
-            post_text = decode_unicode_escape(post.selftext)
+            post_title = fix_text(post.title)
+            post_text = fix_text(post.selftext)
 
             # Fetch the top comments
             post.comments.replace_more(limit=0)
             valid_comments = [
-                decode_unicode_escape(comment.body) for comment in post.comments[:limit_comments] 
+                fix_text(comment.body) for comment in post.comments[:limit_comments] 
                 if not isinstance(comment, MoreComments) 
                 and not is_automod_comment(comment)
                 and comment.body.lower() not in ["[deleted]", "[removed]"]
