@@ -1,6 +1,7 @@
 import os
 import json
 import praw
+import codecs
 from dotenv import load_dotenv
 from praw.models import MoreComments
 
@@ -36,7 +37,8 @@ def is_automod_comment(comment):
 
 def decode_unicode_escape(text):
     try:
-        return text.encode('utf-8').decode('unicode_escape')
+        # Decode the escaped unicode characters
+        return codecs.decode(text, 'unicode_escape')
     except Exception as e:
         print(f"Error decoding text: {e}")
         return text
@@ -97,9 +99,9 @@ def fetch_top_and_hot_posts(limit_posts=50, limit_hot_posts=10, limit_comments=1
     return conversations
 
 def write_to_jsonl(data, filename):
-    with open(filename, 'w') as file:
+    with open(filename, 'w', encoding='utf-8') as file:
         for entry in data:
-            json.dump(entry, file)
+            json.dump(entry, file, ensure_ascii=False)
             file.write('\n')
 
 # Fetch the top and newest posts and comments
