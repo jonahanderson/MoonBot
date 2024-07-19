@@ -2,6 +2,7 @@ import os
 import json
 import praw
 from dotenv import load_dotenv
+from praw.models import MoreComments
 
 # Load environment variables from .env file
 load_dotenv()
@@ -24,28 +25,42 @@ reddit = praw.Reddit(
 
 subreddit = reddit.subreddit('cryptocurrency')
 
-def fetch_top_posts_and_comments():
+def fetch_top_and_hot_posts(limit_posts=30, limit_hot_posts=20, limit_comments=1):
     posts_data = []
-    top_posts = subreddit.top(limit=30)
+    
+    # Fetch top posts
+    top_posts = subreddit.top(time_filter="year", limit=limit_posts)
+    # Fetch newest posts
+    hot_posts = subreddit.hot(limit=limit_hot_posts)
 
-    for post in top_posts:
-        post_id = post.id
-        post_title = post.title
-        post_text = post.selftext
+    # Combine the posts
+    all_posts = list(top_posts) + list(hot_posts)
 
-        # Fetch the top 2 comments
-        post.comments.replace_more(limit=0)
-        top_comments = [comment.body for comment in post.comments[:2]]
+    for post in all_posts:
+        try:
+            post_id = post.id
+            post_title = post.title
+            post_text = post.selftext
 
-        # Prepare the data in the chat format
-        post_data = {
-            "messages": [
-                {"role": "system", "content": "You are a helpful assistant that provides relevant comments to Reddit posts."},
-                {"role": "user", "content": f"Post Title: {post_title}\nPost Text: {post_text}"},
-                {"role": "assistant", "content": " ".join(top_comments)}
+            # Fetch the top comments
+            post.comments.replace_more(limit=0)
+            top_comments = [
+                comment.body for comment in post.comments[:limit_comments] 
+                if not isinstance(comment, MoreComments) and comment.author != "AutoModerator"
             ]
-        }
-        posts_data.append(post_data)
+
+            # Prepare the data in the chat format
+            for comment in top_comments:
+                post_data = {
+                    "messages": [
+                        {"role": "system", "content": "You are a helpful assistant that provides relevant comments to Reddit posts."},
+                        {"role": "user", "content": f"Post Title: {post_title}\nPost Text: {post_text}"},
+                        {"role": "assistant", "content": comment}
+                    ]
+                }
+                posts_data.append(post_data)
+        except Exception as e:
+            print(f"Error fetching post {post.id}: {e}")
 
     return posts_data
 
@@ -55,10 +70,10 @@ def write_to_jsonl(data, filename):
             json.dump(entry, file)
             file.write('\n')
 
-# Fetch the top posts and comments
-top_posts_and_comments = fetch_top_posts_and_comments()
+# Fetch the top and newest posts and comments
+top_and_hot_posts_and_comments = fetch_top_and_hot_posts()
 
 # Write the data to a JSONL file
-write_to_jsonl(top_posts_and_comments, 'reddit_data.jsonl')
+write_to_jsonl(top_and_hot_posts_and_comments, 'reddit_data.jsonl')
 
 print("Data written to reddit_data.jsonl")
