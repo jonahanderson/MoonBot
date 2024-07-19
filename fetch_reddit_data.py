@@ -42,17 +42,18 @@ def fix_text(text):
         print(f"Error fixing text: {e}")
         return text
 
-def fetch_top_and_hot_posts(limit_posts=50, limit_hot_posts=10, limit_comments=1):
+def fetch_top_and_hot_posts(limit_posts=50, limit_hot_posts=25, limit_comments=3):
     conversations = []
-    system_message_added = False
     
     # Fetch top posts
     top_posts = subreddit.top(time_filter="year", limit=limit_posts)
     # Fetch newest posts
-    hot_posts = subreddit.hot(limit=limit_hot_posts)
+    hot_posts = subreddit.top(time_filter="month", limit=limit_hot_posts)
+
+    realhot = subreddit.hot(limit=25)
 
     # Combine the posts
-    all_posts = list(top_posts) + list(hot_posts)
+    all_posts = list(top_posts) + list(hot_posts) + list(realhot)
 
     for post in all_posts:
         try:
@@ -73,8 +74,8 @@ def fetch_top_and_hot_posts(limit_posts=50, limit_hot_posts=10, limit_comments=1
                 continue
 
             # Prepare the data in the chat format
-            for comment in valid_comments:
-                if not system_message_added:
+            for i, comment in enumerate(valid_comments):
+                if i == 0:
                     conversation = {
                         "messages": [
                             {"role": "system", "content": "You are a helpful assistant that provides relevant comments to Reddit posts."},
@@ -82,7 +83,6 @@ def fetch_top_and_hot_posts(limit_posts=50, limit_hot_posts=10, limit_comments=1
                             {"role": "assistant", "content": comment}
                         ]
                     }
-                    system_message_added = True
                 else:
                     conversation = {
                         "messages": [
@@ -91,7 +91,6 @@ def fetch_top_and_hot_posts(limit_posts=50, limit_hot_posts=10, limit_comments=1
                         ]
                     }
                 conversations.append(conversation)
-                break  # Only add the first valid comment for each post
         except Exception as e:
             print(f"Error fetching post {post.id}: {e}")
 
