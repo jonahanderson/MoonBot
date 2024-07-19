@@ -36,12 +36,12 @@ def is_automod_comment(comment):
 
 def decode_unicode_escape(text):
     try:
-        return text.encode('latin1').decode('unicode_escape')
+        return text.encode('utf-8').decode('unicode_escape')
     except Exception as e:
         print(f"Error decoding text: {e}")
         return text
 
-def fetch_top_and_hot_posts(limit_posts=50, limit_hot_posts=15, limit_comments=1):
+def fetch_top_and_hot_posts(limit_posts=50, limit_hot_posts=10, limit_comments=10):
     conversations = []
     system_message_added = False
     
@@ -61,15 +61,18 @@ def fetch_top_and_hot_posts(limit_posts=50, limit_hot_posts=15, limit_comments=1
 
             # Fetch the top comments
             post.comments.replace_more(limit=0)
-            top_comments = [
+            valid_comments = [
                 decode_unicode_escape(comment.body) for comment in post.comments[:limit_comments] 
                 if not isinstance(comment, MoreComments) 
                 and not is_automod_comment(comment)
                 and comment.body.lower() not in ["[deleted]", "[removed]"]
             ]
 
+            if not valid_comments:
+                continue
+
             # Prepare the data in the chat format
-            for comment in top_comments:
+            for comment in valid_comments:
                 if not system_message_added:
                     conversation = {
                         "messages": [
@@ -87,6 +90,7 @@ def fetch_top_and_hot_posts(limit_posts=50, limit_hot_posts=15, limit_comments=1
                         ]
                     }
                 conversations.append(conversation)
+                break  # Only add the first valid comment for each post
         except Exception as e:
             print(f"Error fetching post {post.id}: {e}")
 
