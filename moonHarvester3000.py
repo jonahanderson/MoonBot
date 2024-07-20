@@ -95,7 +95,7 @@ def generate_comments(post_title, post_text):
         completion = openai.chat.completions.create(
             model=fine_tuned_model_id,
             messages=[
-                {"role": "system", "content": "You are a versatile Reddit commenter aiming to maximize karma on the cryptocurrency subreddit. Your comments should be engaging and tailored to the context—sometimes informative, sometimes humorous or sarcastic, and occasionally provocative. Always consider what type of comment will get the most upvotes in each situation."},
+                {"role": "system", "content": "You are a versatile Reddit commenter aiming to maximize karma on the cryptocurrency subreddit. Your comments should be engaging and tailored to the context—sometimes informative, sometimes humorous or sarcastic, and occasionally provocative. Always consider what type of comment will get the most upvotes in each situation. Do not put quotations around the comment."},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=350,
@@ -128,12 +128,22 @@ def process_submission(submission):
     logging.info(f"Processing submission ID {submission.id}...")
     print(f"{Fore.MAGENTA}{'='*80}{Style.RESET_ALL}")
     time.sleep(1)
+    
     print(f"{Fore.CYAN}Title:{Fore.YELLOW} {submission.title}")
+
+
+    # Check for comments by coinfeeds-bot
+    submission.comments.replace_more(limit=0)
+    for comment in submission.comments.list():
+        if comment.author and comment.author.name == "coinfeeds-bot":
+            submission.selftext += f"\n{comment.body}"
+            break
+
     print(f"{Fore.CYAN}Text:{Style.RESET_ALL}\n{submission.selftext}\n")
     print(f"{Fore.CYAN}Karma:{Style.RESET_ALL} {submission.score}")
     print(f"{Fore.CYAN}SUBMISSION ID:{Style.RESET_ALL} {submission.id}")
     print(f"{Fore.CYAN}DATE AND TIME:{Style.RESET_ALL} {datetime.datetime.fromtimestamp(int(submission.created)).strftime('%Y-%m-%d %H:%M:%S')}")
-    print(" --- ")
+    print(" --- ")    
 
     # Store the submission data
     mark_post_as_processed(submission)
