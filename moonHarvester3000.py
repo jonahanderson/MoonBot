@@ -140,7 +140,7 @@ def process_submission(submission):
             break
 
     print(f"{Fore.CYAN}Text:{Style.RESET_ALL}\n{submission.selftext}\n")
-    print(f"{Fore.CYAN}Link:{Fore.yellow}{submission.url}\n")
+    print(f"{Fore.CYAN}Link:{Fore.YELLOW} {submission.url}\n")
     print(f"{Fore.CYAN}Karma:{Style.RESET_ALL} {submission.score}")
     print(f"{Fore.CYAN}SUBMISSION ID:{Style.RESET_ALL} {submission.id}")
     print(f"{Fore.CYAN}DATE AND TIME:{Style.RESET_ALL} {datetime.datetime.fromtimestamp(int(submission.created)).strftime('%Y-%m-%d %H:%M:%S')}")
