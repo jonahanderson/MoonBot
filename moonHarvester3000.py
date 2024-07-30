@@ -89,7 +89,7 @@ def mark_post_as_processed(submission):
 fine_tuned_model_id = os.getenv('FINE_TUNED_MODEL_ID')
 
 def generate_comments(post_title, post_text):
-    prompt = f"Generate a comment for the following Reddit post:\n\nTitle: {post_title}\n\nText: {post_text}\n\n"
+    prompt = f"Generate a comment for the following Reddit post:\n\nTitle: {post_title}\n\nText: {post_text}\n\n Do not use quotation marks around the comment"
     
     try:
         completion = openai.chat.completions.create(
@@ -140,6 +140,7 @@ def process_submission(submission):
             break
 
     print(f"{Fore.CYAN}Text:{Style.RESET_ALL}\n{submission.selftext}\n")
+    print(f"{Fore.CYAN}Link:{Fore.yellow}{submission.url}\n")
     print(f"{Fore.CYAN}Karma:{Style.RESET_ALL} {submission.score}")
     print(f"{Fore.CYAN}SUBMISSION ID:{Style.RESET_ALL} {submission.id}")
     print(f"{Fore.CYAN}DATE AND TIME:{Style.RESET_ALL} {datetime.datetime.fromtimestamp(int(submission.created)).strftime('%Y-%m-%d %H:%M:%S')}")
