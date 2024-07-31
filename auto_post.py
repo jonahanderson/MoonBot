@@ -74,15 +74,16 @@ def main():
     eastern = pytz.timezone('US/Eastern')
     
     # Display the top 10 articles
+    print(f"\n")
     for idx, article in enumerate(articles, start=1):
         eastern_time = article['published'].astimezone(eastern)
         formatted_time = eastern_time.strftime('%Y-%m-%d %I:%M:%S %p %Z')
-        print(f"{Fore.YELLOW}Article {idx}: {Fore.CYAN}{article['title']}\nTIME: {Style.RESET_ALL}{formatted_time}\n{Fore.YELLOW}{article['link']}\n")
+        print(f"{Fore.YELLOW}Article {idx}: {Fore.CYAN}{article['title']}\nTIME: {Style.RESET_ALL}{formatted_time}\n{Fore.CYAN}LINK: {Style.RESET_ALL}{article['link']}\n")
 
     # Get user input to select an article
     while True:
         try:
-            choice = int(input("Enter the number of the article to post (1-10): "))
+            choice = int(input("Enter the article number to post (1-10): "))
             if 1 <= choice <= 10:
                 selected_article = articles[choice - 1]
                 post_to_reddit(selected_article, flair_text)
