@@ -85,18 +85,21 @@ def mark_post_as_processed(submission):
               (submission.id, submission.title, submission.selftext, submission.created_utc))
     conn.commit()
 
+# Fetch the fine-tuned model ID from the environment variables
+fine_tuned_model_id = os.getenv('FINE_TUNED_MODEL_ID')
+
 def generate_comments(post_title, post_text):
-    prompt = f"Generate a comment for the following Reddit post:\n\nTitle: {post_title}\n\nText: {post_text}\n\nPlease ensure the comment is in lowercase, does not contain quotes, and does not contain any emojis or special characters. 30% of the time you create a negative, nuanced comment. 10% of the time you use 1-10 words."
+    prompt = f"Generate a comment for the following Reddit post:\n\nTitle: {post_title}\n\nText: {post_text}\n\n Do not use quotation marks around the comment"
     
     try:
         completion = openai.chat.completions.create(
-            model="gpt-4-turbo",
+            model=fine_tuned_model_id,
             messages=[
-                {"role": "system", "content": "You are a versatile Reddit commenter aiming to maximize karma on the cryptocurrency subreddit. Your comments should be engaging and tailored to the context—sometimes informative, sometimes humorous or sarcastic, and occasionally provocative. Always consider what type of comment will get the most upvotes in each situation. Ensure the comments are in lowercase and do not include any emojis or special characters. Do not overdo it on commas or punctuation."},
+                {"role": "system", "content": "You are a versatile Reddit commenter aiming to maximize karma on the cryptocurrency subreddit. Your comments should be engaging and tailored to the context—sometimes informative, sometimes humorous or sarcastic, and occasionally provocative. Always consider what type of comment will get the most upvotes in each situation. Do not put quotations around the comment."},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=350,
-            temperature=1.0,  # Increased temperature for more variability
+            temperature=0.7,  # Increased temperature for more variability
             n=3  # Request three completions
         )
         comments = [choice.message.content.strip() for choice in completion.choices]
@@ -125,12 +128,23 @@ def process_submission(submission):
     logging.info(f"Processing submission ID {submission.id}...")
     print(f"{Fore.MAGENTA}{'='*80}{Style.RESET_ALL}")
     time.sleep(1)
+    
     print(f"{Fore.CYAN}Title:{Fore.YELLOW} {submission.title}")
+
+
+    # Check for comments by coinfeeds-bot
+    submission.comments.replace_more(limit=0)
+    for comment in submission.comments.list():
+        if comment.author and comment.author.name == "coinfeeds-bot":
+            submission.selftext += f"\n{comment.body}"
+            break
+
     print(f"{Fore.CYAN}Text:{Style.RESET_ALL}\n{submission.selftext}\n")
+    print(f"{Fore.CYAN}Link:{Fore.YELLOW} {submission.url}\n")
     print(f"{Fore.CYAN}Karma:{Style.RESET_ALL} {submission.score}")
     print(f"{Fore.CYAN}SUBMISSION ID:{Style.RESET_ALL} {submission.id}")
     print(f"{Fore.CYAN}DATE AND TIME:{Style.RESET_ALL} {datetime.datetime.fromtimestamp(int(submission.created)).strftime('%Y-%m-%d %H:%M:%S')}")
-    print(" --- ")
+    print(" --- ")    
 
     # Store the submission data
     mark_post_as_processed(submission)

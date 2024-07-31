@@ -2,3 +2,4 @@ praw
 python-dotenv
 colorama
 openai
+ftfy
