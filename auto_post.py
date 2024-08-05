@@ -54,7 +54,7 @@ def fetch_new_articles(rss_feeds):
             })
     # Sort articles by published date in descending order
     new_articles = sorted(new_articles, key=lambda x: x['published'], reverse=True)
-    return new_articles[:15]  # Return top 15 articles
+    return new_articles[:10]  # Return top 10 articles
 
 # Function to get the flair ID based on flair text
 def get_flair_id(subreddit, flair_text):
@@ -78,7 +78,7 @@ def main():
     # Timezone conversion
     eastern = pytz.timezone('US/Eastern')
     
-    # Display the top 15 articles
+    # Display the top 10 articles
     print(f"\n")
     for idx, article in enumerate(articles, start=1):
         eastern_time = article['published'].astimezone(eastern)
@@ -88,15 +88,15 @@ def main():
     # Get user input to select an article
     while True:
         try:
-            choice = int(input("Enter the article number to post (1-15): "))
-            if 1 <= choice <= 15:
+            choice = int(input("Enter the article number to post (1-10): "))
+            if 1 <= choice <= 10:
                 selected_article = articles[choice - 1]
                 post_to_reddit(selected_article, flair_text)
                 break
             else:
-                print("Invalid input. Please enter a number between 1 and 15.")
+                print("Invalid input. Please enter a number between 1 and 10.")
         except ValueError:
-            print("Invalid input. Please enter a number between 1 and 15.")
+            print("Invalid input. Please enter a number between 1 and 10.")
 
 if __name__ == "__main__":
     main()

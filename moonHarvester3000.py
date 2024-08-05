@@ -9,6 +9,8 @@ import sqlite3
 from colorama import init, Fore, Style
 import time
 
+##improve: delete negative comments, show two top comments on feed posts
+
 # Ensure Python version is 3.8 or above
 assert sys.version_info >= (3, 8), "Please use Python 3.8 or above."
 
