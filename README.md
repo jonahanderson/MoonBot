@@ -103,7 +103,7 @@ Replace `your_client_id`, `your_client_secret`, `your_username`, `your_password`
 4. Click "Create app".
 5. Copy the `client_id` and `client_secret` from the newly created app and fill in the `.env` file.
 
-![12345678](https://github.com/jonahanderson/MoonBot/assets/46908058/6421ec45-acb8-4080-9864-5d5283fb6be8)
+<img width="909" alt="Screenshot 2025-06-12 at 12 33 20 PM" src="https://github.com/user-attachments/assets/d3693e08-d029-400e-9426-012c99a2756e" />
 
 
 #### How to Get Your OpenAI API Key
