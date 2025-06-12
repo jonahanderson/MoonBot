@@ -79,7 +79,7 @@ touch .env
 Add your credentials to the `.env` file:
 
 ```sh
-REDDIT_USER_AGENT=script:MoonBot:v1.0 (by /u/justjoner)
+REDDIT_USER_AGENT=script:MoonBot:v1.0
 REDDIT_CLIENT_ID=your_client_id
 REDDIT_CLIENT_SECRET=your_client_secret
 REDDIT_USERNAME=your_username
